@@ -25,18 +25,23 @@ class MinesweeperGame():
         for i in mine_locations:
            self.board[i] = -1
            
-        self.calc_neighbours()
-            
-    def calc_neighbours(self):
-        for i in range(self.num_rows * self.num_cols):
-            if self.board[i] == -1:
-                continue
-                
+        self.calc_neighbours_mines()
+    
+    def get_neighbours(self, i):
             neighbours = []
             neighbours += self.get_above_indices(i)
             neighbours += self.get_below_indices(i)
             neighbours += self.get_left_index(i)
             neighbours += self.get_right_index(i)
+            
+            return neighbours
+    
+    def calc_neighbours_mines(self):
+        for i in range(self.num_rows * self.num_cols):
+            if self.board[i] == -1:
+                continue
+                
+            neighbours = self.get_neighbours(i)
             
             count =0
             for n in neighbours:
@@ -108,8 +113,9 @@ class MainWindow(wx.Frame):
                 dlg.ShowModal()
                 dlg.Destroy()
                 exit()
+            self.expand_zeros(id)
         
-        
+          
     def __init__(self, parent, title, game):
         self.game = game
         self.buttonList = []
@@ -132,6 +138,30 @@ class MainWindow(wx.Frame):
         self.Centre()
         
         self.Show(True)
+    
+    def expand_zeros(self, id):
+        if self.game.board[id] == 0:
+            toOpen = self.find_neighbouring_zeros(id, [])
+            
+            for id in toOpen:
+                self.buttonList[id].SetLabel(str(self.game.board[id]))
+                self.buttonList[id].Disable()
+            
+    def find_neighbouring_zeros(self, id, explored):
+        explored.append(id)
+        if self.game.board[id] != 0:
+            return []
+        neighbours = self.game.get_neighbours(id)
+        toOpen = list(neighbours[:])
+        
+        for n in neighbours:
+            if n not in explored:
+                explored.append(n)
+                if self.game.board[n] == 0:
+                    toOpen.extend(self.find_neighbouring_zeros(n, explored))
+                    
+        return toOpen
+    
     def checkLoss(self, id):
         if self.game.board[id] == -1:
             return True
@@ -152,5 +182,4 @@ app.MainLoop()
 
 
 # ToDo
-# Automatic expansion when clicking 0
 # Never lose on first click
