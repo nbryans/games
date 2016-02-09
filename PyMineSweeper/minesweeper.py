@@ -107,15 +107,18 @@ class MinesweeperGame():
                     
         return toOpen
 
-        
+    def checkLoss(self, id):
+        if self.board[id] == -1:
+            return True
+        return False    
         
 class MainWindow(wx.Frame):
 
     def onButtonClick(self, event):
         button = event.GetEventObject()
-        
+
         id = int(button.GetId())
-        if self.checkLoss(id):
+        if self.game.checkLoss(id):
             dlg = wx.MessageDialog(self, "You Lost", "You Lost", wx.OK)
             dlg.ShowModal()
             dlg.Destroy()
@@ -129,7 +132,13 @@ class MainWindow(wx.Frame):
                 dlg.Destroy()
                 exit()
             self.expand_zeros(id)
-        
+    
+    def onRightClick(self, event):
+        button = event.GetEventObject()
+
+        id = int(button.GetId())
+        if button.IsEnabled():
+            button.SetLabel("F") # Putting F for flagged
           
     def __init__(self, parent, title, game):
         self.game = game
@@ -145,7 +154,8 @@ class MainWindow(wx.Frame):
         for i in range(0, num_rows):
             for j in range(0, num_cols):
                 button = wx.Button(self, id = i*10+j, label = " ")
-                button.Bind(wx.EVT_BUTTON, self.onButtonClick)  
+                button.Bind(wx.EVT_BUTTON, self.onButtonClick)
+                button.Bind(wx.EVT_RIGHT_DOWN, self.onRightClick)
                 gs.Add(button, 0, wx.ALL|wx.EXPAND)
                 self.buttonList.append(button)
 
@@ -161,26 +171,6 @@ class MainWindow(wx.Frame):
             for id in toOpen:
                 self.buttonList[id].SetLabel(str(self.game.board[id]))
                 self.buttonList[id].Disable()
-            
-    # def find_neighbouring_zeros(self, id, explored):
-        # explored.append(id)
-        # if self.game.board[id] != 0:
-            # return []
-        # neighbours = self.game.get_neighbours(id)
-        # toOpen = list(neighbours[:])
-        
-        # for n in neighbours:
-            # if n not in explored:
-                # explored.append(n)
-                # if self.game.board[n] == 0:
-                    # toOpen.extend(self.find_neighbouring_zeros(n, explored))
-                    
-        # return toOpen
-    
-    def checkLoss(self, id):
-        if self.game.board[id] == -1:
-            return True
-        return False
         
     def checkWin(self):
         for b in self.buttonList:
@@ -199,4 +189,5 @@ app.MainLoop()
 # ToDo
 # Never lose on first click
 # Colourful numbers (ie, 1 is blue)
-# Right click to flag mines.
+# Make flagged mines unclickable
+# Add a graphic for flagged mines.
