@@ -113,32 +113,37 @@ class MinesweeperGame():
         return False    
         
 class MainWindow(wx.Frame):
-
+    flag = "%"
     def onButtonClick(self, event):
         button = event.GetEventObject()
-
-        id = int(button.GetId())
-        if self.game.checkLoss(id):
-            dlg = wx.MessageDialog(self, "You Lost", "You Lost", wx.OK)
-            dlg.ShowModal()
-            dlg.Destroy()
-            exit()
-        else:
-            button.SetLabel(str(self.game.board[id]))
-            button.Disable()
-            if self.checkWin():
-                dlg = wx.MessageDialog(self, "You Win!", "You Win!", wx.OK)
+        
+        # We don't allow the button to be clicked if it is flagged
+        if not self.isFlagged(button):
+            id = int(button.GetId())
+            if self.game.checkLoss(id):
+                dlg = wx.MessageDialog(self, "You Lost", "You Lost", wx.OK)
                 dlg.ShowModal()
                 dlg.Destroy()
                 exit()
-            self.expand_zeros(id)
+            else:
+                button.SetLabel(str(self.game.board[id]))
+                button.Disable()
+                if self.checkWin():
+                    dlg = wx.MessageDialog(self, "You Win!", "You Win!", wx.OK)
+                    dlg.ShowModal()
+                    dlg.Destroy()
+                    exit()
+                self.expand_zeros(id)
     
     def onRightClick(self, event):
         button = event.GetEventObject()
 
         id = int(button.GetId())
         if button.IsEnabled():
-            button.SetLabel("F") # Putting F for flagged
+            if self.isFlagged(button):
+                button.SetLabel("")
+            else:
+                button.SetLabel(self.flag) # Putting % for flagged
           
     def __init__(self, parent, title, game):
         self.game = game
@@ -169,8 +174,9 @@ class MainWindow(wx.Frame):
             toOpen = self.game.find_neighbouring_zeros(id, [])
             
             for id in toOpen:
-                self.buttonList[id].SetLabel(str(self.game.board[id]))
-                self.buttonList[id].Disable()
+                if not self.isFlagged(self.buttonList[id]): #Don't want to open flagged squares
+                    self.buttonList[id].SetLabel(str(self.game.board[id]))
+                    self.buttonList[id].Disable()
         
     def checkWin(self):
         for b in self.buttonList:
@@ -178,6 +184,12 @@ class MainWindow(wx.Frame):
             if b.IsEnabled() and self.game.board[id] != -1:
                 return False
         return True
+        
+    def isFlagged(self, button):
+        if self.flag in button.GetLabel():
+            return True
+        else:
+            return False
         
 #Main
 game = MinesweeperGame(10,10, 10)
