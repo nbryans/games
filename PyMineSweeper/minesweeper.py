@@ -1,4 +1,15 @@
-#!/usr/bin/python
+#!/usr/bin/env python
+
+"""
+Minesweeper the Game
+
+ToDo's
+- Never lose on first click
+- Colourful numbers (ie, 1 is blue)
+- Add a graphic for flagged mines.
+"""
+
+__author__ = "Nathan Bryans"
 
 import wx
 import os
@@ -7,7 +18,6 @@ import random
 class MinesweeperGame():
 
     board = []
-
             
     def __init__(self, num_rows, num_cols, num_mines):
         self.num_rows = num_rows
@@ -43,7 +53,7 @@ class MinesweeperGame():
                 
             neighbours = self.get_neighbours(i)
             
-            count =0
+            count = 0
             for n in neighbours:
                 if self.board[n] == -1:
                     count += 1
@@ -51,14 +61,14 @@ class MinesweeperGame():
             
             
     def get_above_indices(self, num):
-        if num < self.num_cols:     # Top Row                     
+        if num < self.num_cols:             # Top Row                     
             return []
             
         aboveLeft = num-self.num_cols - 1
         above = num-self.num_cols
         aboveRight = num-self.num_cols + 1
         
-        if num % self.num_cols == 0:          # Left Column
+        if num % self.num_cols == 0:        # Left Column
             return [above, aboveRight]
         if (num+1) % self.num_cols == 0:    # Right Column
             return [aboveLeft, above]
@@ -108,12 +118,12 @@ class MinesweeperGame():
         return toOpen
 
     def checkLoss(self, id):
-        if self.board[id] == -1:
-            return True
-        return False    
+        return self.board[id] == -1     #return True is mine clicked, False otherwise   
         
 class MainWindow(wx.Frame):
+
     flag = "%"
+    
     def onButtonClick(self, event):
         button = event.GetEventObject()
         
@@ -143,7 +153,7 @@ class MainWindow(wx.Frame):
             if self.isFlagged(button):
                 button.SetLabel("")
             else:
-                button.SetLabel(self.flag) # Putting % for flagged
+                button.SetLabel(self.flag) # Put '%' for flagged
           
     def __init__(self, parent, title, game):
         self.game = game
@@ -196,10 +206,3 @@ game = MinesweeperGame(10,10, 10)
 app = wx.App(False)
 frame = MainWindow(None, "MineSweeper", game)
 app.MainLoop()
-
-
-# ToDo
-# Never lose on first click
-# Colourful numbers (ie, 1 is blue)
-# Make flagged mines unclickable
-# Add a graphic for flagged mines.
