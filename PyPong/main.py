@@ -30,9 +30,12 @@ class Ball(pygame.sprite.Sprite):
         self.y_delta *= -1   
         
     def move(self):     
-        if self.rect.x < 0 or self.rect.x > self.screen_rect.width-self.rect.width:
+        if  self.rect.x > self.screen_rect.width-self.rect.width:
             self.reverseCourseX()
             print "reverse X"
+        elif self.rect.x < 0:
+            print "You Lose"
+            self.reverseCourseX()
         if self.rect.y < 0 or self.rect.y > self.screen_rect.height-self.rect.height:
             self.reverseCourseY()
             print "reverse Y"
@@ -101,8 +104,10 @@ class PyPongMain:
                 
             # Check for collision between the ball and paddle
             pad_collsn = pygame.sprite.collide_rect(self.ball, self.paddle)
-            #if pad_collsn == True:
-            #    print "hello world"
+            if pad_collsn == True:
+                self.ball.reverseCourseX()
+                self.ball.reverseCourseY()
+                self.ball.move()
             
             # Do the Drawing
             self.screen.blit(self.background, (0,0))
