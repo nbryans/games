@@ -2,6 +2,7 @@ import os, sys
 import pygame
 from pygame.locals import *
 from helpers import *
+import time
 
 if not pygame.font: print "Warning, fonts disabled"
 if not pygame.mixer: print "Warning, sound disabled"
@@ -12,19 +13,42 @@ if not pygame.mixer: print "Warning, sound disabled"
    Much credit goes to them"""
 
 class Ball(pygame.sprite.Sprite):
-    def __init__(self, rect=None):
+    def __init__(self, screen_rect, rect=None):
         pygame.sprite.Sprite.__init__(self)
         self.image, self.rect = load_image('squareBall.png', -1)
+        self.screen_rect = screen_rect
+        
+        self.x_delta = 1
+        self.y_delta = -1
+        
         if rect != None:
             self.rect = rect
+    def reverseCourseX(self):
+        self.x_delta *= -1
+        
+    def reverseCourseY(self):
+        self.y_delta *= -1   
+        
+    def move(self):     
+        if self.rect.x < 0 or self.rect.x > self.screen_rect.width-self.rect.width:
+            self.reverseCourseX()
+            print "reverse X"
+        if self.rect.y < 0 or self.rect.y > self.screen_rect.height-self.rect.height:
+            self.reverseCourseY()
+            print "reverse Y"
+            
+        self.rect.move_ip(self.x_delta, self.y_delta)
+            
+
 
 class Paddle(pygame.sprite.Sprite):
     
-    def __init__(self):
+    def __init__(self, screen_rect):
         pygame.sprite.Sprite.__init__(self)
         self.image, self.rect = load_image('paddle.png', -1)
         
         self.y_dist = 5
+        self.screen_rect = screen_rect
         
     def move(self, key):
         yMove = 0
@@ -35,6 +59,7 @@ class Paddle(pygame.sprite.Sprite):
             yMove = self.y_dist
         
         self.rect.move_ip(0, yMove)
+        self.rect.clamp_ip(self.screen_rect)
         
 class PyPongMain:
 
@@ -43,10 +68,13 @@ class PyPongMain:
         self.width = width
         self.height = height
         self.screen = pygame.display.set_mode((self.width, self.height))
+        self.screen_rect = pygame.Rect((0,0), (self.width, self.height))
         
     def MainLoop(self):
-        print "here1"
         self.LoadSprites()
+        
+        loopCounter = 0
+        ballRate = 10 # Ball moves when loopCounter % ballRate is 0
         
         pygame.key.set_repeat(500, 30) # Tell pygame to keep sending up keystroles when they are held down
         
@@ -54,11 +82,11 @@ class PyPongMain:
         self.background = pygame.Surface(self.screen.get_size())
         self.background = self.background.convert()
         self.background.fill((0,0,0))
-        print "here2"
         
         while 1:
+            loopCounter += 1
             self.paddle_sprite.draw(self.screen)
-            self.ball_sprites.draw(self.screen)
+            self.ball_sprite.draw(self.screen)
             pygame.display.flip()
             
             for event in pygame.event.get():
@@ -67,23 +95,32 @@ class PyPongMain:
                 elif event.type == KEYDOWN:
                     if ((event.key == K_UP) or (event.key == K_DOWN)):
                         self.paddle.move(event.key)
+                        
+            if loopCounter % ballRate == 0:
+                self.ball.move()
+                
+            # Check for collision between the ball and paddle
+            pad_collsn = pygame.sprite.collide_rect(self.ball, self.paddle)
+            #if pad_collsn == True:
+            #    print "hello world"
             
             # Do the Drawing
             self.screen.blit(self.background, (0,0))
             
-            self.ball_sprites.draw(self.screen)
+            self.ball_sprite.draw(self.screen)
             self.paddle_sprite.draw(self.screen)
             pygame.display.flip()
+            
+            if loopCounter == 10000:
+                loopCounter = 0
         
     def LoadSprites(self):
-        self.paddle = Paddle()
+        self.paddle = Paddle(self.screen_rect)
         self.paddle_sprite = pygame.sprite.RenderPlain((self.paddle))
         
-        #self.ball = Ball()
-        #self.ball_sprite = pygame.sprite.RenderPlain((self.ball))
-        self.ball_sprites = pygame.sprite.Group()
-        self.ball_sprites.add(Ball(pygame.Rect(30,30,20,20)))
-        self.ball_sprites.add(Ball(pygame.Rect(60,60,20,20)))
+        self.ball = Ball(self.screen_rect, pygame.Rect(60,60,20,20))
+        self.ball_sprite = pygame.sprite.RenderPlain((self.ball))
+        
         
 if __name__ == "__main__":
     MainWindow = PyPongMain()
