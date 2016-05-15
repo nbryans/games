@@ -4,13 +4,11 @@
 Minesweeper the Game
 
 ToDo's
-- Never lose on first click
 - Colourful numbers (ie, 1 is blue)
 - Add a graphic for flagged mines.
 """
 
 __author__ = "Nathan Bryans"
-
 import wx
 import os
 import random
@@ -23,6 +21,9 @@ class MinesweeperGame():
         self.num_rows = num_rows
         self.num_cols = num_cols
         self.num_mines = num_mines
+
+        if num_mines > num_rows*num_cols-1:
+            self.num_mines = num_rows*num_cols-1
         
         for i in range(num_rows):
             for j in range(num_cols):
@@ -34,9 +35,22 @@ class MinesweeperGame():
         
         for i in mine_locations:
            self.board[i] = -1
+        print mine_locations
            
         self.calc_neighbours_mines()
     
+    def swap_mine_for_first_click(self, id):
+        print "Swapping"
+        listOfNoMines = []
+        for i in range(self.num_rows * self.num_cols):
+            if self.board[i] != -1:
+                listOfNoMines.append(i)
+        random.shuffle(listOfNoMines)
+
+        self.board[id] = 0
+        self.board[listOfNoMines[0]] = -1
+        self.calc_neighbours_mines()
+
     def get_neighbours(self, i):
             neighbours = []
             neighbours += self.get_above_indices(i)
@@ -123,6 +137,7 @@ class MinesweeperGame():
 class MainWindow(wx.Frame):
 
     flag = "%"
+    firstClick = True
     
     def onButtonClick(self, event):
         button = event.GetEventObject()
@@ -130,21 +145,30 @@ class MainWindow(wx.Frame):
         # We don't allow the button to be clicked if it is flagged
         if not self.isFlagged(button):
             id = int(button.GetId())
-            if self.game.checkLoss(id):
-                dlg = wx.MessageDialog(self, "You Lost", "You Lost", wx.OK)
-                dlg.ShowModal()
-                dlg.Destroy()
-                exit()
+            if self.game.checkLoss(id) and not self.firstClick:
+                self.lose_actions()
             else:
+                if self.game.checkLoss(id):
+                    self.game.swap_mine_for_first_click(id)
                 button.SetLabel(str(self.game.board[id]))
                 button.Disable()
                 if self.checkWin():
-                    dlg = wx.MessageDialog(self, "You Win!", "You Win!", wx.OK)
-                    dlg.ShowModal()
-                    dlg.Destroy()
-                    exit()
+                    self.win_actions()
                 self.expand_zeros(id)
-    
+                self.firstClick = False
+
+    def win_actions(self):
+        dlg = wx.MessageDialog(self, "You Win!", "You Win!", wx.OK)
+        dlg.ShowModal()
+        dlg.Destroy()
+        exit()
+
+    def lose_actions(self):
+        dlg = wx.MessageDialog(self, "You Lost", "You Lost", wx.OK)
+        dlg.ShowModal()
+        dlg.Destroy()
+        exit()
+
     def onRightClick(self, event):
         button = event.GetEventObject()
 
@@ -158,13 +182,14 @@ class MainWindow(wx.Frame):
     def __init__(self, parent, title, game):
         self.game = game
         self.buttonList = []
-    
-        wx.Frame.__init__(self, parent, title=title, size= (500,500))
         
-        gs = wx.GridSizer(10,10) # 10 rows and 10 columns
+        num_rows = game.num_rows
+        num_cols = game.num_cols
+        square_size_px = 35
+
+        wx.Frame.__init__(self, parent, title=title, size= (square_size_px*num_rows,square_size_px*num_cols))
         
-        num_rows = 10
-        num_cols = 10
+        gs = wx.GridSizer(num_rows,num_cols) # 10 rows and 10 columns
         
         for i in range(0, num_rows):
             for j in range(0, num_cols):
