@@ -6,6 +6,7 @@ Minesweeper the Game
 ToDo's
 - Colourful numbers (ie, 1 is blue)
 - Add a graphic for flagged mines.
+- Double click to clear neighbours automatically (all unflagged neighbours)
 """
 
 __author__ = "Nathan Bryans"
