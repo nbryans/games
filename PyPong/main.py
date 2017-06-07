@@ -106,7 +106,8 @@ class PyPongMain:
             pad_collsn = pygame.sprite.collide_rect(self.ball, self.paddle)
             if pad_collsn == True:
                 self.ball.reverseCourseX()
-                self.ball.reverseCourseY()
+                # Right now on;y the X direction changes course. This could be a problem for
+                # when I hit the bottom of the paddle.
                 self.ball.move()
             
             # Do the Drawing
